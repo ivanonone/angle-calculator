@@ -1,0 +1,206 @@
+<pre><script type="text/javascript">
+function addFields(){
+    var dimension = document.getElementById("slDimension").value;
+    var number = document.getElementById("txtPoints").value;
+
+    var container = document.getElementById("container");
+    while (container.hasChildNodes()) {
+        container.removeChild(container.lastChild);
+    }
+
+    var distanceContainer = document.getElementById("distanceContainer");
+    while (distanceContainer.hasChildNodes()) {
+        distanceContainer.removeChild(distanceContainer.lastChild);
+    }
+
+    var table = document.createElement("table");
+    table.setAttribute("id", "myTable");
+    container.appendChild(table);
+    
+    for (i=0;i<number;i++){
+        var tr = document.createElement("tr");
+        tr.setAttribute("id", "myTr" + i);
+        table.appendChild(tr);
+
+        var td = document.createElement("td");
+        td.appendChild(document.createTextNode("Point " + (i+1)));
+        tr.appendChild(td);
+
+        td = document.createElement("td");
+        td.appendChild(document.createTextNode("X:"));
+        tr.appendChild(td);
+
+        td = document.createElement("td");
+        var inputX = document.createElement("input");
+        inputX.type = "text";
+        inputX.setAttribute("id", "pointX"+i);
+        td.appendChild(inputX);
+        tr.appendChild(td);
+
+        td = document.createElement("td");
+        td.appendChild(document.createTextNode("Y:"));
+        tr.appendChild(td);
+
+        td = document.createElement("td");
+        var inputY = document.createElement("input");
+        inputY.type = "text";
+        inputY.setAttribute("id", "pointY"+i);
+        td.appendChild(inputY);
+        tr.appendChild(td);
+
+        if(dimension == "3d") {
+            td = document.createElement("td");
+            td.appendChild(document.createTextNode("Z:"));
+            tr.appendChild(td);
+
+            td = document.createElement("td");
+            var inputZ = document.createElement("input");
+            inputZ.type = "text";
+            inputZ.setAttribute("id", "pointZ"+i);
+            td.appendChild(inputZ);
+            tr.appendChild(td);
+        }
+    }
+    var button=document.createElement("button");
+    button.type="button";
+    button.innerHTML="Calculate";
+    button.setAttribute("onclick","calculate()");
+    container.appendChild(button);
+}
+
+function calculate(){
+    var distanceContainer = document.getElementById("distanceContainer");
+    while (distanceContainer.hasChildNodes()) {
+        distanceContainer.removeChild(distanceContainer.lastChild);
+    }
+
+    var dimension = document.getElementById("slDimension").value;
+    var number = document.getElementById("txtPoints").value;
+    distanceContainer.appendChild(document.createElement("br"));
+
+    var table = document.createElement("table");
+    table.setAttribute("id", "myTableContainer");
+    distanceContainer.appendChild(table);
+
+    var tr = document.createElement("tr");
+    table.appendChild(tr);
+
+    var td = document.createElement("td");
+    var tbDistance = document.createElement("table");
+    tbDistance.setAttribute("id", "tbDistance");
+    td.appendChild(tbDistance);
+    tr.appendChild(td);
+
+    td = document.createElement("td");
+    var tbAngle = document.createElement("table");
+    tbAngle.setAttribute("id", "tbAngle");
+    td.appendChild(tbAngle);
+    tr.appendChild(td);
+
+    for (i=0;i<number-1;i++){
+        var alphaX = document.getElementById("pointX"+i).value;
+        var alphaY = document.getElementById("pointY"+i).value;
+        var alphaZ = 0;
+
+        var betaX = document.getElementById("pointX"+(i+1)).value;
+        var betaY = document.getElementById("pointY"+(i+1)).value;
+        var betaZ = 0;
+
+        if(dimension == "3d") {
+            alphaZ = document.getElementById("pointZ"+i).value;
+            betaZ = document.getElementById("pointZ"+(i+1)).value;
+        }
+
+        tr = document.createElement("tr");
+        tbDistance.appendChild(tr);
+
+        td = document.createElement("td");
+        td.appendChild(document.createTextNode((i+1)+"--"+(i+2)));
+        tr.appendChild(td);
+
+        td = document.createElement("td");
+        var distance = calculateDistance(alphaX, alphaY, alphaZ, betaX, betaY, betaZ);
+        td.appendChild(document.createTextNode(distance));
+        tr.appendChild(td);
+    }
+
+    for (i=0;i<number-2;i++){
+        var alphaX = document.getElementById("pointX"+i).value;
+        var alphaY = document.getElementById("pointY"+i).value;
+        var alphaZ = 0;
+
+        var betaX = document.getElementById("pointX"+(i+1)).value;
+        var betaY = document.getElementById("pointY"+(i+1)).value;
+        var betaZ = 0;
+
+        var gamaX = document.getElementById("pointX"+(i+2)).value;
+        var gamaY = document.getElementById("pointY"+(i+2)).value;
+        var gamaZ = 0;
+
+        if(dimension == "3d") {
+            alphaZ = document.getElementById("pointZ"+i).value;
+            betaZ = document.getElementById("pointZ"+(i+1)).value;
+            gamaZ = document.getElementById("pointZ"+(i+2)).value;
+        }
+
+        var alphaVector = calculateVector(alphaX, alphaY, alphaZ, betaX, betaY, betaZ);
+        var betaVector = calculateVector(betaX, betaY, betaZ, gamaX, gamaY, gamaZ);
+
+        tr = document.createElement("tr");
+        tbAngle.appendChild(tr);
+
+        td = document.createElement("td");
+        td.appendChild(document.createTextNode("^"+(i+2)));
+        tr.appendChild(td);
+
+        td = document.createElement("td");
+        var cos = calculateCos(alphaVector, betaVector);
+        var angle = calculateAngle(cos);
+        td.appendChild(document.createTextNode("Cos: " + cos + " ---> Angle: " + angle));
+        tr.appendChild(td);
+    }
+}
+
+function calculateDistance(alphaX, alphaY, alphaZ, betaX, betaY, betaZ) {
+    return Math.sqrt(Math.pow(betaX-alphaX,2)+Math.pow(betaY-alphaY,2)+Math.pow(betaZ-alphaZ,2));
+}
+
+function calculateVector(alphaX, alphaY, alphaZ, betaX, betaY, betaZ) {
+    return (betaX-alphaX)+"#"+(betaY-alphaY)+"#"+(betaZ-alphaZ);
+}
+
+function calculateCos(alphaVector, betaVector) {
+    var alpha = alphaVector.split("#");
+    var alphaX = alpha[0];
+    var alphaY = alpha[1];
+    var alphaZ = alpha[2];
+
+    var beta = betaVector.split("#");
+    var betaX = beta[0];
+    var betaY = beta[1];
+    var betaZ = beta[2];
+
+    return ((alphaX*betaX)+(alphaY*betaY)+(alphaZ*betaZ))/(Math.sqrt(Math.pow(alphaX, 2)+Math.pow(alphaY, 2)+Math.pow(alphaZ, 2))*Math.sqrt(Math.pow(betaX, 2)+Math.pow(betaY, 2)+Math.pow(betaZ, 2)));
+}
+
+function calculateAngle(cos) {
+    return (Math.acos(cos)*180)/Math.PI;
+}
+
+</script></pre>
+<table border="0">
+<tbody>
+<tr>
+<td>Choose dimension:</td>
+<td><select id="slDimension">
+<option value="3d">3D</option>
+<option value="2d">2D</option>
+</select></td>
+<td>Specify number of points:</td>
+<td><input id="txtPoints" type="text" /></td>
+<td><button type="button">Insert Points</button></td>
+</tr>
+</tbody>
+</table>
+<div id="container"> </div>
+<div id="distanceContainer"> </div>
